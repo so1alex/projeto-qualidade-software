@@ -84,4 +84,4 @@ projeto-code-quality/
 │   └── test_calculadora.py    # Testes unitários com Pytest
 │
 ├── requirements.txt           # Dependências do projeto
-└── README.md                  # Documentação
+└── README.md                  # Documentação.
