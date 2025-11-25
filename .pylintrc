@@ -1,0 +1,17 @@
+[MASTER]
+# Ensina o Pylint a olhar para a pasta atual para resolver imports
+init-hook='import sys; sys.path.append(".")'
+
+[MESSAGES CONTROL]
+# Desabilita erros que conflitam com SOLID e Arquitetura Limpa
+disable=
+    R0903,  ; Too few public methods (Ignorar: Nossas classes SOLID são pequenas propositalmente)
+    W0613,  ; Unused argument (Ignorar: Interfaces obrigam a receber argumentos mesmo sem usar)
+    C0114,  ; Missing module docstring (Ignorar: Arquivos __init__ vazios não precisam de texto)
+    C0115,  ; Missing class docstring (Ignorar: Classes muito óbvias)
+    C0116,  ; Missing function docstring (Ignorar: Métodos muito óbvios)
+    R1705   ; Unnecessary "elif" (Ignorar: Questão de estilo, não de erro)
+
+[FORMAT]
+# Aumenta o limite de linha para 120 (O padrão 100 é muito curto hoje em dia)
+max-line-length=120

@@ -1,87 +1,60 @@
-# 🛒 Sistema de Processamento de Pedidos (E-commerce)
+# 🛢️ PetroBahia S.A. - Refatoração de Sistema Legado
 
-Este projeto simula o backend de um sistema de vendas online. Ele é responsável por receber uma lista de itens, aplicar regras de impostos baseadas na categoria do produto e executar ações pós-venda (notificação e salvamento).
+Este projeto consiste na análise, diagnóstico e refatoração completa de um sistema legado de processamento de pedidos de combustíveis. 
 
-O projeto foi desenvolvido em duas versões ("Legado" vs "Refatorado") para demonstrar como boas práticas de engenharia tornam a lógica de negócios mais segura e clara.
-
----
-
-## ⚙️ Funcionalidades e Regras de Negócio
-
-O sistema implementa a seguinte lógica comercial:
-
-### 1. Cálculo de Preço com Impostos
-O sistema processa itens de diferentes categorias. A regra de taxação é:
-* **Itens Normais:** O valor é somado integralmente.
-* **Itens Extras (Luxo/Especiais):** Recebem uma taxa de **10%** sobre o valor original.
-    * *Exemplo:* Um item "Mouse" de R$ 60,00 viraria R$ 66,00.
-
-### 2. Sistema de Notificação Inteligente
-Após calcular o total, o sistema decide quem avisar baseada no valor da compra:
-* **Pedidos acima de R$ 100,00:** Envia um **Alerta Prioritário** para o Gerente (simulado via log).
-* **Pedidos abaixo de R$ 100,00:** Apenas registra um log comum de operação.
-
-### 3. Persistência de Dados
-Todos os pedidos processados são enviados para um módulo de repositório que simula o salvamento em banco de dados ou arquivo de log.
+O objetivo foi transformar um código procedural, acoplado e difícil de manter em uma arquitetura robusta, testável e aderente aos princípios **SOLID** e **Clean Architecture**.
 
 ---
 
-## 📂 Arquitetura do Projeto
+## 🕵️‍♂️ Diagnóstico: Problemas Encontrados no Legado
 
-O código foi reestruturado seguindo o padrão de **Camadas (Layered Architecture)** para isolar essas regras:
+Antes da refatoração, o código apresentava violações graves de boas práticas:
 
-### `models.py` (Dados)
-Define O QUE é um "Item" e um "Pedido". Não faz contas, apenas transporta dados.
-
-### `services.py` (O Cérebro)
-Aqui vivem as regras de negócio descritas acima:
-* `CalculadoraDeImposto`: Contém a lógica matemática dos 10%.
-* `NotificadorEmail`: Contém a lógica do `if total > 100`.
-
-### `main.py` (O Maestro)
-Apenas cria os dados de teste e chama os serviços na ordem correta.
+1.  **Violação do OCP (Open/Closed Principle):** * O cálculo de preços dependia de cadeias gigantes de `if/else` para verificar o tipo de combustível (`diesel`, `gasolina`, etc.). Para adicionar um novo produto, era necessário modificar o código principal, gerando risco de bugs.
+2.  **Violação do SRP (Single Responsibility Principle):**
+    * O módulo de clientes misturava validação de dados (CPF/Email), persistência (gravar em arquivo `.txt`) e notificação (prints de envio de email).
+3.  **Violação do DIP (Dependency Inversion Principle):**
+    * O sistema dependia diretamente de implementações concretas (leitura direta de disco rígido), tornando impossível a criação de testes unitários isolados.
+4.  **Acoplamento e Rigidez:**
+    * Regras de negócio (descontos) estavam misturadas com regras de apresentação (arredondamento de casas decimais).
 
 ---
 
-## 🛠 Ferramentas de Qualidade
+## 🏗️ Decisões de Design e Arquitetura
 
-Para garantir que essas regras de negócio não quebrem e o código permaneça legível, utilizamos:
+Para resolver os problemas acima, adotou-se uma **Arquitetura Limpa (Layered Architecture)** dividida em 4 camadas:
 
-| Ferramenta | Função |
-| :--- | :--- |
-| **Pytest** | Garante que a matemática (10% de taxa) esteja sempre correta. |
-| **Pylint** | Garante que o código não tenha erros de lógica ou variáveis soltas. |
-| **Black/Isort** | Mantém a formatação visual padronizada. |
+### 1. Camada Core (`src/core`)
+* **Responsabilidade:** Contém as Entidades (`models.py`) e os Contratos (`interfaces.py`).
+* **Decisão:** Inverter a dependência. O sistema não depende mais de arquivos `.txt`, mas sim de uma interface `RepositorioClienteInterface`.
+
+### 2. Camada Infrastructure (`src/infrastructure`)
+* **Responsabilidade:** Implementar os detalhes técnicos (IO, Banco de Dados, Algoritmos Específicos).
+* **Design Pattern (Strategy):** Para resolver o problema dos `if/else` de combustíveis e cupons, utilizou-se o padrão **Strategy**. Cada combustível (Diesel, Gasolina) agora é uma classe separada que implementa `CalculadoraCombustivelInterface`.
+    * *Benefício:* Adicionar "Hidrogênio" no futuro não exige alterar o código existente, apenas criar uma nova classe.
+
+### 3. Camada Use Cases (`src/use_cases`)
+* **Responsabilidade:** Orquestrar as regras de negócio.
+* **Decisão:** Separar a validação do cliente da persistência. O `CadastradorCliente` apenas coordena: ele pede para validar e depois pede para o repositório salvar.
+
+### 4. Camada Main (`main.py`)
+* **Responsabilidade:** Injeção de Dependência.
+* **Decisão:** O `main.py` é o único ponto do sistema que conhece as implementações concretas (`RepositorioTXT`, `CalculadoraDiesel`). Ele "monta" o sistema e injeta as dependências nos casos de uso.
 
 ---
 
-## 🚀 Como Rodar o Sistema
+## 🛠️ Stack Tecnológica e Qualidade
 
-Certifique-se de ativar seu ambiente virtual (`venv`).
+O projeto garante a qualidade contínua através das ferramentas:
 
-### 1. Instalar Dependências
+* **Pylint:** Nota **10.00/10** (Código limpo e sem "Code Smells").
+* **Black & Isort:** Padronização visual estrita (PEP 8).
+* **Pytest:** Testes unitários validando a lógica matemática e a arquitetura (DIP).
+
+## 🚀 Como Executar
+
+Certifique-se de estar com o ambiente virtual ativo.
+
+### 1. Executar o Sistema
 ```powershell
-pip install -r requirements.txt
-
----
-
-## 📂 Estrutura do Projeto
-
-O repositório está dividido em dois cenários para comparação ("Antes e Depois"):
-
-```text
-projeto-code-quality/
-│
-├── 📁 1_legacy_chaos/         # CENÁRIO 1: O Problema
-│   └── processador.py         # Código "espaguete", sem padrão e difícil de manter.
-│
-├── 📁 2_refactored_solid/     # CENÁRIO 2: A Solução
-│   ├── main.py                # Entrada do sistema (Orquestrador)
-│   ├── models.py              # Definição de Dados (Data Classes)
-│   └── services.py            # Regras de Negócio (Lógica Pura)
-│
-├── 📁 tests/                  # GARANTIA DE QUALIDADE
-│   └── test_calculadora.py    # Testes unitários com Pytest
-│
-├── requirements.txt           # Dependências do projeto
-└── README.md                  # Documentação
+python main.py
