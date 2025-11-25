@@ -5,7 +5,6 @@ Responsabilidade: Gravar dados fisicamente em um arquivo de texto.
 Implementa: RepositorioClienteInterface (DIP)
 """
 
-
 from src.core.interfaces import RepositorioClienteInterface
 from src.core.models import Cliente
 

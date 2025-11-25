@@ -1,5 +1,5 @@
 # Importação relativa (ponto significa "desta mesma pasta")
-from .preco_calculadora import calcular_preco
+from preco_calculadora import calcular_preco
 
 def processar_pedido(p):
     prod = p.get("produto")

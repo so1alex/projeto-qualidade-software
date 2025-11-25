@@ -1,6 +1,6 @@
 import re
 
-REG_EMAIL = "^[^@\s]+@[^@\s]+\.[^@\s]+$"
+REG_EMAIL = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
 
 def cadastrar_cliente(c):
     if "email" not in c or "nome" not in c:
